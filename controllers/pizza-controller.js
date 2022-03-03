@@ -22,6 +22,29 @@ const pizzaController = {
   // Sequelize .findAll() method.
   getAllPizza(req, res) {
     Pizza.find({})
+    // the pizza stores the comments associated with it by the comments' id.
+    // here we are populating the comments field.
+    // To populate a field, just chain the .populate() method onto your query, 
+    // passing in an object with the key path plus the value of the field you want populated.
+    // mongo will see the pizza's comments array, and match the comment ids, and populate
+    // the comment id with the comment objects data.
+      .populate({
+        path: 'comments',
+        // Note that we also used the select option inside of populate(), so that we can 
+        // tell Mongoose that we don't care about the __v field on comments either. The 
+        // minus sign - in front of the field indicates that we don't want it to be returned. 
+        // If we didn't have it, it would mean that it would return only the __v field.
+        select: '-__v'
+      })
+      // Since we're doing that for our populated comments, let's update the query 
+      // to not include the pizza's __v field either, as it adds more noise to our
+      // returning data that we don't need.
+      .select('-__v')
+      // Lastly, we should set up the query so that the newest pizza returns first. 
+      // Mongoose has a .sort() method to help with this. After the .select() method, 
+      // use .sort({ _id: -1 }) to sort in DESC order by the pizza _id value. This gets 
+      // the newest pizza because a timestamp value is hidden somewhere inside the MongoDB ObjectId.
+      .sort({ _id: -1 })
       .then(dbPizzaData => res.json(dbPizzaData))
       .catch(err => {
         console.log(err);
@@ -38,8 +61,12 @@ const pizzaController = {
   // alert users that it doesn't exist.
   getPizzaById({ params }, res) {
     Pizza.findOne({ _id: params.id })
+      .populate({
+        path: 'comments',
+        select: '-__v'
+      })
+      .select('-__v')
       .then(dbPizzaData => {
-        // If no pizza is found, send 404
         if (!dbPizzaData) {
           res.status(404).json({ message: 'No pizza found with this id!' });
           return;

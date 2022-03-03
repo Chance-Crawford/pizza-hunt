@@ -13,6 +13,9 @@
 // constructor and model function, so we'll just import them.
 const { Schema, model } = require('mongoose');
 
+// function to format the created at date.
+const dateFormat = require('../utils/dateFormat');
+
 // creating a general structure for the pizza documents even though we
 // dont have to so that it is not just a 
 // free for all.
@@ -20,7 +23,8 @@ const { Schema, model } = require('mongoose');
 // fields with specific data types. We don't have to define the fields, as 
 // MongoDB will allow the data anyway, but for for clarity and usability, 
 // we should regulate what the data will look like.
-const PizzaSchema = new Schema({
+const PizzaSchema = new Schema(
+  {
     // See how we don't have to use special imported data types for the 
     // type definitions? Using MongoDB and Mongoose, we simply instruct the 
     // schema that this data will adhere to the built-in JavaScript data types, 
@@ -38,7 +42,20 @@ const PizzaSchema = new Schema({
       // when the user creates new data, the Date.now function will be executed 
       // and will provide a timestamp. This way we don't have to create the 
       // timestamp elsewhere and send that data.
-      default: Date.now
+      default: Date.now,
+      // since the created at timestamp isnt very user friendly we'll use 
+      // getters to transform the data by default every time it's queried.
+      // In programming, a getter is typically a special type of function 
+      // that takes the stored data you are looking to retrieve and modifies 
+      // or formats it upon return. Think of it like middleware for your data!
+      // To use a getter in Mongoose, we just need to add the key get to the 
+      // field we are looking to use it with in the schema. Just like a virtual, 
+      // the getter will transform the data before it gets to the controller(s).
+      // With this get option in place, every time we retrieve a pizza, the value 
+      // in the createdAt field will be formatted by the dateFormat() function and 
+      // used instead of the default timestamp value. This way, we can use the timestamp 
+      // value for storage, but use a prettier version of it for display.
+      get: (createdAtVal) => dateFormat(createdAtVal)
     },
     size: {
       type: String,
@@ -46,7 +63,58 @@ const PizzaSchema = new Schema({
     },
     // The brackets indicate an array as the data type. You could also specify 
     // Array in place of the brackets.
-    toppings: []
+    toppings: [],
+    // Remember that you've dealt with associations already, when working with Sequelize. 
+    // To connect two tables with Sequelize, you'd have to store a reference of the parent 
+    // data's id with the child data.
+    // In Mongoose, though, we can instruct the parent to keep track of its children, 
+    // not the other way around. There aren't really restrictions for creating relationships, 
+    // but we should try using a built-in Mongoose feature.
+    // first add a comments array field to the Pizza schema.
+    comments: [
+      {
+        // Specifically, we need to tell Mongoose to expect an ObjectId and to 
+        // tell it that its data comes from the Comment model.
+        type: Schema.Types.ObjectId,
+        // The ref property is especially important because it tells the Pizza model 
+        // which documents to search to find the right comments.
+        ref: 'Comment'
+      }
+    ]
+  },
+  // we need to tell the schema that it can use virtuals.
+  // To do so, you'll need to add the toJSON property to the schema options.
+  // virtuals defined below.
+  // Now again, we'll need to tell the Mongoose model that it should 
+  // use any getter function we've specified. Update the toJSON object in 
+  // the model options for the PizzaSchema.
+  {
+    toJSON: {
+      virtuals: true,
+      getters: true
+    },
+    // We set id to false because this is a virtual that Mongoose returns, 
+    // and we don’t need it.
+    id: false
+  }
+);
+
+// The client has mentioned that they also want to get a count of how many comments a pizza has.
+// To maintain this count as persistent data in the database, we'd have to update it anytime 
+// someone adds or deletes a comment. But if possible, we want to avoid creating a helper 
+// function, to reduce the complexity of the controllers. Luckily Mongoose has a built-in 
+// solution for this dilemma, known as virtuals.
+// Virtuals allow you to add virtual properties to a document that aren't stored in the 
+// database. They're normally computed values that get evaluated when you try to 
+// access their properties. For example a property like pizza.commentCount.
+// Virtuals allow us to add more information to a database response so that we don't 
+// have to add in the information manually with a helper before responding to the API request.
+// get total count of comments and replies on retrieval.
+// virtuals use a method to access a field that doesn't actually exist in the database
+PizzaSchema.virtual('commentCount').get(function() {
+  // return this pizza's comments length. Accesses the comments that are associated with
+  // the pizza and returns the length.
+  return this.comments.length;
 });
 
 // Now we need to actually create the model to get the prebuilt methods that Mongoose provides.
