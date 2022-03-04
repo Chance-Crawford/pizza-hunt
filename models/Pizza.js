@@ -112,9 +112,21 @@ const PizzaSchema = new Schema(
 // get total count of comments and replies on retrieval.
 // virtuals use a method to access a field that doesn't actually exist in the database
 PizzaSchema.virtual('commentCount').get(function() {
-  // return this pizza's comments length. Accesses the comments that are associated with
+  // return this pizza's comments length + the replies. Accesses the comments that are associated with
   // the pizza and returns the length.
-  return this.comments.length;
+  // Here we're using the .reduce() method to tally up the total of every comment with 
+  // its replies. In its basic form, .reduce() takes two parameters, an accumulator 
+  // and a currentValue. Here, the accumulator is total, and the currentValue is 
+  // comment. As .reduce() walks through the array, it passes the accumulating total 
+  // and the current value of comment into the function, with the return of the function 
+  // revising the total for the next iteration through the array.
+  // The .reduce() method can do more than just tally up sums, though. What if you 
+  // needed to get the average years of experience of a team of software developers? 
+  // Sure, you could write a for loop with some logic. Or, instead, you could write a 
+  // clean map and reduce function. The reduce function can accept a custom callback function
+  // as a parameter
+  // that performs more complex operations.
+  return this.comments.reduce((total, comment) => total + comment.replies.length + 1, 0);
 });
 
 // Now we need to actually create the model to get the prebuilt methods that Mongoose provides.

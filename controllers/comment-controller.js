@@ -46,6 +46,43 @@ const commentController = {
       .catch(err => res.json(err));
   },
 
+  // We’ll create and remove replies almost exactly like we did with comments, but it’s actually a 
+  // little simpler this time. Luckily, replies exist directly within a comment.
+  // With new replies, we aren't actually creating a reply document; we're just 
+  // updating an existing comment.
+  addReply({ params, body }, res) {
+    Comment.findOneAndUpdate(
+      // find comment based on id
+      { _id: params.commentId },
+      // push new reply object from body into the replies array of the respective comment instance.
+      { $push: { replies: body } },
+      { new: true }
+    )
+      .then(dbPizzaData => {
+        if (!dbPizzaData) {
+          res.status(404).json({ message: 'No pizza found with this id!' });
+          return;
+        }
+        res.json(dbPizzaData);
+      })
+      .catch(err => res.json(err));
+  },
+
+  // update the comment by removing the reply subdocument stored
+  // inside it's array.
+  removeReply({ params }, res){
+    Comment.findOneAndUpdate(
+      { _id: params.commentId },
+      // Here, we're using the MongoDB $pull operator to remove the specific 
+      // reply from the replies array where the replyId matches the value of 
+      // params.replyId passed in from the route.
+      { $pull: { replies: { replyId: params.replyId } } },
+      { new: true }
+    )
+      .then(dbPizzaData => res.json(dbPizzaData))
+      .catch(err => res.json(err));
+  },
+
   // remove comment
   // Now, for the removeComment() method, remember that not only do we need to 
   // delete the comment, but we also need to remove it from the pizza it’s associated with.

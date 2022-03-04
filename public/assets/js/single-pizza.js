@@ -1,3 +1,5 @@
+// const { get } = require("express/lib/request");
+
 const $backBtn = document.querySelector('#back-btn');
 const $pizzaName = document.querySelector('#pizza-name');
 const $createdBy = document.querySelector('#created-by');
@@ -9,9 +11,38 @@ const $newCommentForm = document.querySelector('#new-comment-form');
 
 let pizzaId;
 
+function getPizza() {
+  // get id of pizza from the URL query parameter
+  const searchParams = new URLSearchParams(document.location.search.substring(1));
+  const pizzaId = searchParams.get('id');
+
+  // get pizzaInfo
+  fetch(`/api/pizzas/${pizzaId}`)
+    .then(response => {
+      // check for a 4xx or 5xx error from server
+      if (!response.ok) {
+        throw new Error({ message: 'Something went wrong!' });
+      }
+      console.log(response);
+      return response.json();
+    })
+    .then(printPizza)
+    // Now add a .catch() so that any error takes the user back 
+    // to the home page, using the window.history.back() method.
+    .catch(err => {
+      console.log(err);
+      alert('Cannot find a pizza with this id! Taking you back.');
+      // The window history API exposes methods that let us control the state 
+      // of the browser's session. As long as this particular browser session has 
+      // a previous page, it will behave as if the user had clicked on the "Back" button.
+      window.history.back();
+    });;
+}
+
 function printPizza(pizzaData) {
   console.log(pizzaData);
 
+  // assigns id of pizza to a variable that can be used in the scope of this file.
   pizzaId = pizzaData._id;
 
   const { pizzaName, createdBy, createdAt, size, toppings, comments } = pizzaData;
@@ -86,9 +117,35 @@ function handleNewCommentSubmit(event) {
     return false;
   }
 
+  // package up comment details in an object
   const formData = { commentBody, writtenBy };
+
+  // make request to post new comment to the pizza
+  fetch(`/api/comments/${pizzaId}`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(formData)
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Something went wrong!');
+      }
+      response.json();
+    })
+    .then(commentResponse => {
+      console.log(commentResponse);
+      // refresh page to show the added comment
+      location.reload();
+    })
+    .catch(err => {
+      console.log(err);
+    });
 }
 
+// adds replies to comments as a subdocument to the comment
 function handleNewReplySubmit(event) {
   event.preventDefault();
 
@@ -105,7 +162,31 @@ function handleNewReplySubmit(event) {
     return false;
   }
 
+  // create reply object to add as a sub document to the respective comment.
   const formData = { writtenBy, replyBody };
+
+  fetch(`/api/comments/${pizzaId}/${commentId}`, {
+    method: 'PUT',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(formData)
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Something went wrong!');
+      }
+      response.json();
+    })
+    .then(commentResponse => {
+      console.log(commentResponse);
+      // refresh page to show new reply.
+      location.reload();
+    })
+    .catch(err => {
+      console.log(err);
+    });
 }
 
 $backBtn.addEventListener('click', function() {
@@ -114,3 +195,5 @@ $backBtn.addEventListener('click', function() {
 
 $newCommentForm.addEventListener('submit', handleNewCommentSubmit);
 $commentSection.addEventListener('submit', handleNewReplySubmit);
+
+getPizza();
