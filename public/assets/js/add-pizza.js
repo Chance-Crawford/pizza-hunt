@@ -1,6 +1,10 @@
+
+const { saveRecord } = require("./idb");
+
 const $addToppingBtn = document.querySelector('#add-topping');
 const $pizzaForm = document.querySelector('#pizza-form');
 const $customToppingsList = document.querySelector('#custom-toppings-list');
+
 
 const handleAddTopping = event => {
   event.preventDefault();
@@ -68,6 +72,11 @@ const handlePizzaSubmit = event => {
     })
     .catch(err => {
       console.log(err);
+      // see idb.js file.
+      // Now when a user tries to submit a new pizza without an 
+      // internet connection, instead of the app simply failing, the data will be 
+      // stored in the new_pizza object store in the browser's IndexedDB database called pizza_hunt!
+      saveRecord(formData);
     });
 };
 
