@@ -30,10 +30,27 @@ const PizzaSchema = new Schema(
     // schema that this data will adhere to the built-in JavaScript data types, 
     // including strings, Booleans, numbers, and so on.
     pizzaName: {
-      type: String
+      type: String,
+      // When you started this project, you were able to iterate on the MongoDB 
+      // data needs faster than you could have for SQL because MongoDB doesn't enforce 
+      // any rules. This flexibility can help you quickly reach MVP by allowing you to 
+      // test and scale your app without running into too many issues.
+      // But now that we've solidified the idea for data storage and the app will soon 
+      // be used by everyday people, we should add rules to help maintain some normalized 
+      // data for the app to run smoothly. Remember, because MongoDB doesn’t care about 
+      // schema at all, we need tools like Mongoose to help enforce any validation rules.
+      // Just like Sequelize, when the required field option in Mongoose is set to true, 
+      // it will require data to exist for that field.
+      required: true,
+      // Also notice the trim option that's been added, which works just like the JavaScript 
+      // .trim() method and removes white space before and after the input string. You'll 
+      // find that useful when working with username and password data.
+      trim: true
     },
     createdBy: {
-      type: String
+      type: String,
+      required: true,
+      trim: true
     },
     createdAt: {
       type: Date,
@@ -59,6 +76,14 @@ const PizzaSchema = new Schema(
     },
     size: {
       type: String,
+      required: true,
+      // In this example, the enum option stands for enumerable, a popular term in web 
+      // development that refers to a set of data that can be iterated over—much like using 
+      // the for...in loop to iterate through an object.
+      // With this validation option in place, we provide an array of options that this size 
+      // field will accept. If a user attempts to enter a pizza size not listed in the enum—
+      // for example, a size value of "Super Mega Large"—the validation simply won't allow it.
+      enum: ['Personal', 'Small', 'Medium', 'Large', 'Extra Large'],
       default: 'Large'
     },
     // The brackets indicate an array as the data type. You could also specify 

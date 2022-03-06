@@ -33,7 +33,7 @@ const commentController = {
           // developer is using.
           { $push: { comments: _id } },
           // response will be the new updated pizza data.
-          { new: true }
+          { new: true, runValidators: true }
         );
       })
       .then(dbPizzaData => {
@@ -56,7 +56,7 @@ const commentController = {
       { _id: params.commentId },
       // push new reply object from body into the replies array of the respective comment instance.
       { $push: { replies: body } },
-      { new: true }
+      { new: true, runValidators: true }
     )
       .then(dbPizzaData => {
         if (!dbPizzaData) {
