@@ -1,5 +1,4 @@
 
-const { saveRecord } = require("./idb");
 
 const $addToppingBtn = document.querySelector('#add-topping');
 const $pizzaForm = document.querySelector('#pizza-form');

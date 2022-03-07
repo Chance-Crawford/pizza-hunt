@@ -62,6 +62,10 @@ request.onsuccess = function(event) {
 // This function will be executed if we attempt to submit a new pizza and there's 
 // no internet connection.
 // Let's go ahead and add this function to be executed in add-pizza.js
+// we do not need to export or import this method to use it in the public folder because
+// it is front end javascript and all the front end javascript is static on the server.
+// so this function and save functionality in this file
+// can still be accessed in add-pizza.js
 function saveRecord(record) {
     // open a new transaction with the indexed database with read and write permissions.
     // With IndexedDB, we don't always have that direct connection like we do with SQL 
@@ -160,7 +164,3 @@ function uploadPizza() {
 // listen for app coming back online to upload any pizzas that may have been 
 // uploaded during the outage.
 window.addEventListener('online', uploadPizza);
-
-module.exports = {
-    saveRecord
-}
